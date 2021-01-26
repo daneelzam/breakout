@@ -25,22 +25,24 @@ const bricks = [];
 for (let i = 0; i < brickColumnCount; i += 1) {
   bricks[i] = [];
   for (let j = 0; j < brickRowCount; j += 1) {
-    bricks[i][j] = { x: 0, y: 0 };
+    bricks[i][j] = { x: 0, y: 0, status: 1 };
   }
 }
 // функция которая рисует кирпичи
 function drawBricks() {
   for (let i = 0; i < brickColumnCount; i += 1) {
     for (let j = 0; j < brickRowCount; j += 1) {
-      const brickX = (i * (brickWidth + brickPadding)) + brickOffsetLeft;
-      const brickY = (j * (brickWidth + brickPadding)) + brickOffsetTop;
-      bricks[i][j].x = brickX;
-      bricks[i][j].y = brickY;
-      ctx.beginPath();
-      ctx.rect(brickX, brickY, brickWidth, brickHeight);
-      ctx.fillStyle = 'red';
-      ctx.fill();
-      ctx.closePath();
+      if (bricks[i][j].status === 1) {
+        const brickX = (i * (brickWidth + brickPadding)) + brickOffsetLeft;
+        const brickY = (j * (brickWidth + brickPadding)) + brickOffsetTop;
+        bricks[i][j].x = brickX;
+        bricks[i][j].y = brickY;
+        ctx.beginPath();
+        ctx.rect(brickX, brickY, brickWidth, brickHeight);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+        ctx.closePath();
+      }
     }
   }
 }
@@ -63,6 +65,45 @@ function drawPaddle() {
   ctx.closePath();
 }
 
+// проверяет, нажата ли стрелочка влево или вправо
+// если нажата, то меняет флаг на true
+function keyDownHandler(e) {
+  if (e.keyCode === 39) {
+    rightPressed = true;
+  } else if (e.keyCode === 37) {
+    leftPressed = true;
+  }
+}
+
+// проверяет, отпущена ли стрелочка влево или вправо
+// если отпущена, то меняет флаг на false
+function keyUpHandler(e) {
+  if (e.keyCode === 39) {
+    rightPressed = false;
+  } else if (e.keyCode === 37) {
+    leftPressed = false;
+  }
+}
+
+// функция, которая проверяет столкновение с блоками
+function collisionDetection() {
+  for (let i = 0; i < brickColumnCount; i += 1) {
+    for (let j = 0; j < brickRowCount; j += 1) {
+      const current = bricks[i][j];
+      if (
+        current.status === 1
+        && x > current.x
+          && x < current.x + brickWidth
+          && y > current.y
+          && y < current.y + brickHeight
+      ) {
+        dy = -dy;
+        current.status = 0;
+      }
+    }
+  }
+}
+
 // функция рендерит игру
 function draw() {
   // очищаем поле
@@ -73,6 +114,8 @@ function draw() {
   drawBall();
   // рисуем ракетку
   drawPaddle();
+  // проверяем столкновение с кирпичами
+  collisionDetection();
   // смещаем центр шарика для следующей отрисовки
   x += dx;
   y += dy;
@@ -106,26 +149,6 @@ function draw() {
     paddleX += 3;
   } else if (leftPressed && paddleX > 0) {
     paddleX -= 3;
-  }
-}
-
-// проверяет, нажата ли стрелочка влево или вправо
-// если нажата, то меняет флаг на true
-function keyDownHandler(e) {
-  if (e.keyCode === 39) {
-    rightPressed = true;
-  } else if (e.keyCode === 37) {
-    leftPressed = true;
-  }
-}
-
-// проверяет, отпущена ли стрелочка влево или вправо
-// если отпущена, то меняет флаг на false
-function keyUpHandler(e) {
-  if (e.keyCode === 39) {
-    rightPressed = false;
-  } else if (e.keyCode === 37) {
-    leftPressed = false;
   }
 }
 
