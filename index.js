@@ -45,20 +45,30 @@ function draw() {
   y += dy;
   // проверяем, чтобы шарик не столкнулся с краем
   // если столкнулся, то меняем цвет и направление
-  if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {    
+  if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
     color = 'blue';
     dx = -dx;
   }
-  if (y + dy > canvas.height - ballRadius || y + dy < ballRadius) {
-    color = 'red';
+  if (y + dy < ballRadius) {
+    color = 'green';
     dy = -dy;
+  }
+  if (y + dy > canvas.height - ballRadius) {
+    if (x > paddleX && x < paddleX + paddleWidth) {
+      dy = -dy * 1.2;
+    } else {
+      alert('GAME OVER');
+      document.location.reload();
+      // eslint-disable-next-line no-use-before-define
+      clearInterval(interval);
+    }
   }
   // проверяем нажата ли клавиша стрелочка влево или вправо
   // если нажата смещаем левый край ракетки на 7 пикселей в нужную сторону
   if (rightPressed && paddleX < canvas.width - paddleWidth) {
-    paddleX += 7;
+    paddleX += 3;
   } else if (leftPressed && paddleX > 0) {
-    paddleX -= 7;
+    paddleX -= 3;
   }
 }
 
@@ -84,4 +94,4 @@ function keyUpHandler(e) {
 
 document.addEventListener('keydown', keyDownHandler, false);
 document.addEventListener('keyup', keyUpHandler, false);
-setInterval(draw, 10);
+const interval = setInterval(draw, 10);
