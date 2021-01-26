@@ -13,6 +13,37 @@ let paddleX = (canvas.width - paddleWidth) / 2; // начальная позиц
 // ширина холста минус ширина ракетки деленная на два
 let rightPressed = false;// ракетка движется вправо (ложь)
 let leftPressed = false;// ракетка движется влево (ложь)
+const brickRowCount = 3;
+const brickColumnCount = 5;
+const brickWidth = 75;
+const brickHeight = 20;
+const brickPadding = 10;
+const brickOffsetTop = 30;
+const brickOffsetLeft = 30;
+const bricks = [];
+
+for (let i = 0; i < brickColumnCount; i += 1) {
+  bricks[i] = [];
+  for (let j = 0; j < brickRowCount; j += 1) {
+    bricks[i][j] = { x: 0, y: 0 };
+  }
+}
+// функция которая рисует кирпичи
+function drawBricks() {
+  for (let i = 0; i < brickColumnCount; i += 1) {
+    for (let j = 0; j < brickRowCount; j += 1) {
+      const brickX = (i * (brickWidth + brickPadding)) + brickOffsetLeft;
+      const brickY = (j * (brickWidth + brickPadding)) + brickOffsetTop;
+      bricks[i][j].x = brickX;
+      bricks[i][j].y = brickY;
+      ctx.beginPath();
+      ctx.rect(brickX, brickY, brickWidth, brickHeight);
+      ctx.fillStyle = 'red';
+      ctx.fill();
+      ctx.closePath();
+    }
+  }
+}
 
 // функция которая рисует шарик
 function drawBall() {
@@ -36,6 +67,8 @@ function drawPaddle() {
 function draw() {
   // очищаем поле
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // рисуем кирпичи
+  drawBricks();
   // рисуем шарик
   drawBall();
   // рисуем ракетку
@@ -53,9 +86,13 @@ function draw() {
     color = 'green';
     dy = -dy;
   }
+  // проверяем столкнулся ли шарик с нижней границей
   if (y + dy > canvas.height - ballRadius) {
+    // если столкнулся,проверяем попал ли он в ракетку
     if (x > paddleX && x < paddleX + paddleWidth) {
+      // если попал, то меняем направление мячика и увеличиваем скорость игры
       dy = -dy * 1.2;
+      // иначе останавливаем игру
     } else {
       alert('GAME OVER');
       document.location.reload();
