@@ -5,7 +5,7 @@ let dx = 2;// при каждой отрисовке смещается по Х 
 let dy = -2;// при каждой отрисовке смещается по Y на dy
 let x = canvas.width / 2;// начальная координата центра шарика (посередине в ширину)
 let y = canvas.height - 30;// начальная координата центра шарика (на 30 пикселей выше нижнего края)
-let color = 'red';// цвет шарика
+const color = '#008701';// цвет шарика
 const ballRadius = 10; // радиус шарика
 const paddleHeight = 10; // высота ракетки
 const paddleWidth = 75; // ширина ракетки
@@ -13,15 +13,18 @@ let paddleX = (canvas.width - paddleWidth) / 2; // начальная позиц
 // ширина холста минус ширина ракетки деленная на два
 let rightPressed = false;// ракетка движется вправо (ложь)
 let leftPressed = false;// ракетка движется влево (ложь)
-const brickRowCount = 3;
-const brickColumnCount = 5;
-const brickWidth = 75;
-const brickHeight = 20;
-const brickPadding = 10;
-const brickOffsetTop = 30;
-const brickOffsetLeft = 30;
-const bricks = [];
+const brickRowCount = 2;// количество строк с блоками
+const brickColumnCount = 5;// количество столбцов с блоками
+const brickWidth = 75;// ширина блока
+const brickHeight = 20;// высота блока
+const brickPadding = 20;// отступ от блока
+const brickOffsetTop = 10;// отступ сверху
+const brickOffsetLeft = 10;// отступ слева
+const bricks = [];// массив блоков
+let score = 0;
+let lives = 3;
 
+// наполянем массив блоков блоками
 for (let i = 0; i < brickColumnCount; i += 1) {
   bricks[i] = [];
   for (let j = 0; j < brickRowCount; j += 1) {
@@ -34,13 +37,13 @@ function drawBricks() {
     for (let j = 0; j < brickRowCount; j += 1) {
       if (bricks[i][j].status === 1) {
         const brickX = (i * (brickWidth + brickPadding)) + brickOffsetLeft;
-        const brickY = (j * (brickWidth + brickPadding)) + brickOffsetTop;
+        const brickY = ((j / 1.5) * (brickWidth + brickPadding)) + brickOffsetTop;
         bricks[i][j].x = brickX;
         bricks[i][j].y = brickY;
         ctx.beginPath();
         ctx.rect(brickX, brickY, brickWidth, brickHeight);
-        ctx.fillStyle = 'red';
-        ctx.fill();
+        ctx.strokeStyle = color;
+        ctx.stroke();
         ctx.closePath();
       }
     }
@@ -60,7 +63,7 @@ function drawBall() {
 function drawPaddle() {
   ctx.beginPath();
   ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
-  ctx.fillStyle = 'yellow';
+  ctx.fillStyle = color;
   ctx.fill();
   ctx.closePath();
 }
@@ -85,6 +88,13 @@ function keyUpHandler(e) {
   }
 }
 
+function mouseMoveHandler(e) {
+  const relativeX = e.clientX - canvas.offsetLeft;
+  if (relativeX > 0 && relativeX < canvas.width) {
+    paddleX = relativeX - paddleWidth / 2;
+  }
+}
+
 // функция, которая проверяет столкновение с блоками
 function collisionDetection() {
   for (let i = 0; i < brickColumnCount; i += 1) {
@@ -99,9 +109,27 @@ function collisionDetection() {
       ) {
         dy = -dy;
         current.status = 0;
+        score += 1;
+        if (score === brickRowCount * brickColumnCount) {
+          alert('YOU WIN, CONGRATULATIONS!');
+          document.location.reload();
+        }
       }
     }
   }
+}
+
+// функция, которая рисует количество очков
+function drowScore() {
+  ctx.font = '16px Arial';
+  ctx.fillStyle = color;
+  ctx.fillText(`Score: ${score}`, 8, 20);
+}
+// функция, которая рисует количество жизней
+function drowLives() {
+  ctx.font = '16px Arial';
+  ctx.fillStyle = color;
+  ctx.fillText(`Lives: ${lives}`, 8, 40);
 }
 
 // функция рендерит игру
@@ -112,6 +140,10 @@ function draw() {
   drawBricks();
   // рисуем шарик
   drawBall();
+  // рисуем жизни
+  drowLives();
+  // рисуем счет
+  drowScore();
   // рисуем ракетку
   drawPaddle();
   // проверяем столкновение с кирпичами
@@ -122,11 +154,9 @@ function draw() {
   // проверяем, чтобы шарик не столкнулся с краем
   // если столкнулся, то меняем цвет и направление
   if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
-    color = 'blue';
     dx = -dx;
   }
   if (y + dy < ballRadius) {
-    color = 'green';
     dy = -dy;
   }
   // проверяем столкнулся ли шарик с нижней границей
@@ -134,13 +164,20 @@ function draw() {
     // если столкнулся,проверяем попал ли он в ракетку
     if (x > paddleX && x < paddleX + paddleWidth) {
       // если попал, то меняем направление мячика и увеличиваем скорость игры
-      dy = -dy * 1.2;
+      dy = -dy;
       // иначе останавливаем игру
     } else {
-      alert('GAME OVER');
-      document.location.reload();
-      // eslint-disable-next-line no-use-before-define
-      clearInterval(interval);
+      lives -= 1;
+      if (!lives) {
+        alert('GAME OVER');
+        document.location.reload();
+      } else {
+        x = canvas.width / 2;
+        y = canvas.height - 30;
+        dx = 2;
+        dy = -2;
+        paddleX = (canvas.width - paddleWidth) / 2;
+      }
     }
   }
   // проверяем нажата ли клавиша стрелочка влево или вправо
@@ -150,8 +187,10 @@ function draw() {
   } else if (leftPressed && paddleX > 0) {
     paddleX -= 3;
   }
+  requestAnimationFrame(draw);
 }
 
 document.addEventListener('keydown', keyDownHandler, false);
 document.addEventListener('keyup', keyUpHandler, false);
-const interval = setInterval(draw, 10);
+document.addEventListener('mousemove', mouseMoveHandler, false);
+draw();
